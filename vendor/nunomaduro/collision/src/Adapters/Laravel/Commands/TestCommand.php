@@ -13,7 +13,6 @@ use Illuminate\Support\Str;
 use NunoMaduro\Collision\Adapters\Laravel\Exceptions\RequirementsException;
 use NunoMaduro\Collision\Coverage;
 use ParaTest\Options;
-use PHPUnit\Runner\Version;
 use RuntimeException;
 use SebastianBergmann\Environment\Console;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -71,18 +70,6 @@ class TestCommand extends Command
      */
     public function handle()
     {
-        $phpunitVersion = Version::id();
-
-        if ($phpunitVersion[0].$phpunitVersion[1] !== '10') {
-            throw new RequirementsException('Running Collision 7.x artisan test command requires at least PHPUnit 10.x.');
-        }
-
-        $laravelVersion = \Illuminate\Foundation\Application::VERSION;
-
-        if ($laravelVersion[0].$laravelVersion[1] !== '10') { // @phpstan-ignore-line
-            throw new RequirementsException('Running Collision 7.x artisan test command requires at least Laravel 10.x.');
-        }
-
         if ($this->option('coverage') && ! Coverage::isAvailable()) {
             $this->output->writeln(sprintf(
                 "\n  <fg=white;bg=red;options=bold> ERROR </> Code coverage driver not available.%s</>",
@@ -100,7 +87,7 @@ class TestCommand extends Command
         $usesParallel = $this->option('parallel');
 
         if ($usesParallel && ! $this->isParallelDependenciesInstalled()) {
-            throw new RequirementsException('Running Collision 7.x artisan test command in parallel requires at least ParaTest (brianium/paratest) 7.x.');
+            throw new RequirementsException('Running Collision 8.x artisan test command in parallel requires at least ParaTest (brianium/paratest) 7.x.');
         }
 
         $options = array_slice($_SERVER['argv'], $this->option('without-tty') ? 3 : 2);
@@ -143,7 +130,8 @@ class TestCommand extends Command
                 $this->newLine();
             }
 
-            $coverage = Coverage::report($this->output);
+            $hideFullCoverage = (bool) $this->option('compact');
+            $coverage = Coverage::report($this->output, $hideFullCoverage);
 
             $exitCode = (int) ($coverage < $this->option('min'));
 
@@ -236,11 +224,21 @@ class TestCommand extends Command
                 && ! Str::startsWith($option, '--min');
         }));
 
+        return array_merge($this->commonArguments(), ['--configuration='.$this->getConfigurationFile()], $options);
+    }
+
+    /**
+     * Get the configuration file.
+     *
+     * @return string
+     */
+    protected function getConfigurationFile()
+    {
         if (! file_exists($file = base_path('phpunit.xml'))) {
             $file = base_path('phpunit.xml.dist');
         }
 
-        return array_merge($this->commonArguments(), ["--configuration=$file"], $options);
+        return $file;
     }
 
     /**
@@ -260,22 +258,19 @@ class TestCommand extends Command
                 && $option != '--no-ansi'
                 && ! Str::startsWith($option, '--min')
                 && ! Str::startsWith($option, '-p')
+                && ! Str::startsWith($option, '--compact')
                 && ! Str::startsWith($option, '--parallel')
                 && ! Str::startsWith($option, '--recreate-databases')
                 && ! Str::startsWith($option, '--drop-databases')
                 && ! Str::startsWith($option, '--without-databases');
         }));
 
-        if (! file_exists($file = base_path('phpunit.xml'))) {
-            $file = base_path('phpunit.xml.dist');
-        }
-
         $options = array_merge($this->commonArguments(), [
-            "--configuration=$file",
+            '--configuration='.$this->getConfigurationFile(),
             "--runner=\Illuminate\Testing\ParallelRunner",
         ], $options);
 
-        $inputDefinition = new InputDefinition();
+        $inputDefinition = new InputDefinition;
         Options::setInputDefinition($inputDefinition);
         $input = new ArgvInput($options, $inputDefinition);
 
@@ -373,7 +368,7 @@ class TestCommand extends Command
 
         $vars = [];
 
-        foreach ((new Parser())->parse($content) as $entry) {
+        foreach ((new Parser)->parse($content) as $entry) {
             $vars[] = $entry->getName();
         }
 
@@ -388,21 +383,5 @@ class TestCommand extends Command
     protected function isParallelDependenciesInstalled()
     {
         return class_exists(\ParaTest\ParaTestCommand::class);
-    }
-
-    /**
-     * Get the composer command for the environment.
-     *
-     * @return string
-     */
-    protected function findComposer()
-    {
-        $composerPath = getcwd().'/composer.phar';
-
-        if (file_exists($composerPath)) {
-            return '"'.PHP_BINARY.'" '.$composerPath;
-        }
-
-        return 'composer';
     }
 }

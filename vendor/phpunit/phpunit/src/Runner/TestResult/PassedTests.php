@@ -13,12 +13,13 @@ use function array_merge;
 use function assert;
 use function in_array;
 use PHPUnit\Event\Code\TestMethod;
-use PHPUnit\Event\TestData\NoDataSetFromDataProviderException;
 use PHPUnit\Framework\TestSize\Known;
 use PHPUnit\Framework\TestSize\TestSize;
 use PHPUnit\Metadata\Api\Groups;
 
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
 final class PassedTests
@@ -26,12 +27,12 @@ final class PassedTests
     private static ?self $instance = null;
 
     /**
-     * @psalm-var list<class-string>
+     * @var list<class-string>
      */
     private array $passedTestClasses = [];
 
     /**
-     * @psalm-var array<string,array{returnValue: mixed, size: TestSize}>
+     * @var array<string,array{returnValue: mixed, size: TestSize}>
      */
     private array $passedTestMethods = [];
 
@@ -47,21 +48,18 @@ final class PassedTests
     }
 
     /**
-     * @psalm-param class-string $className
+     * @param class-string $className
      */
     public function testClassPassed(string $className): void
     {
         $this->passedTestClasses[] = $className;
     }
 
-    /**
-     * @throws NoDataSetFromDataProviderException
-     */
     public function testMethodPassed(TestMethod $test, mixed $returnValue): void
     {
         $size = (new Groups)->size(
             $test->className(),
-            $test->methodName()
+            $test->methodName(),
         );
 
         $this->passedTestMethods[$test->className() . '::' . $test->methodName()] = [
@@ -74,17 +72,17 @@ final class PassedTests
     {
         $this->passedTestClasses = array_merge(
             $this->passedTestClasses,
-            $other->passedTestClasses
+            $other->passedTestClasses,
         );
 
         $this->passedTestMethods = array_merge(
             $this->passedTestMethods,
-            $other->passedTestMethods
+            $other->passedTestMethods,
         );
     }
 
     /**
-     * @psalm-param class-string $className
+     * @param class-string $className
      */
     public function hasTestClassPassed(string $className): bool
     {
