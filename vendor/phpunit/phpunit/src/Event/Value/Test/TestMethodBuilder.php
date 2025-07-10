@@ -13,21 +13,20 @@ use function assert;
 use function is_numeric;
 use PHPUnit\Event\TestData\DataFromDataProvider;
 use PHPUnit\Event\TestData\DataFromTestDependency;
-use PHPUnit\Event\TestData\MoreThanOneDataSetFromDataProviderException;
 use PHPUnit\Event\TestData\TestDataCollection;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Metadata\Parser\Registry as MetadataRegistry;
+use PHPUnit\Util\Exporter;
 use PHPUnit\Util\Reflection;
-use SebastianBergmann\Exporter\Exporter;
+use PHPUnit\Util\Test as TestUtil;
 
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestMethodBuilder
+final readonly class TestMethodBuilder
 {
-    /**
-     * @throws MoreThanOneDataSetFromDataProviderException
-     */
     public static function fromTestCase(TestCase $testCase): TestMethod
     {
         $methodName = $testCase->name();
@@ -48,8 +47,13 @@ final class TestMethodBuilder
     }
 
     /**
-     * @throws MoreThanOneDataSetFromDataProviderException
+     * @throws NoTestCaseObjectOnCallStackException
      */
+    public static function fromCallStack(): TestMethod
+    {
+        return TestUtil::currentTestCase()->valueObjectForEvents();
+    }
+
     private static function dataFor(TestCase $testCase): TestDataCollection
     {
         $testData = [];
@@ -63,13 +67,14 @@ final class TestMethodBuilder
 
             $testData[] = DataFromDataProvider::from(
                 $dataSetName,
-                (new Exporter)->export($testCase->providedData())
+                Exporter::shortenedRecursiveExport($testCase->providedData()),
+                $testCase->dataSetAsStringWithData(),
             );
         }
 
         if ($testCase->hasDependencyInput()) {
             $testData[] = DataFromTestDependency::from(
-                (new Exporter)->export($testCase->dependencyInput())
+                Exporter::shortenedRecursiveExport($testCase->dependencyInput()),
             );
         }
 

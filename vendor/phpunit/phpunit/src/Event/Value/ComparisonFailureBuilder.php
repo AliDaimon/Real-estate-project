@@ -16,9 +16,11 @@ use PHPUnit\Framework\ExpectationFailedException;
 use Throwable;
 
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ComparisonFailureBuilder
+final readonly class ComparisonFailureBuilder
 {
     public static function from(Throwable $t): ?ComparisonFailure
     {
@@ -45,7 +47,7 @@ final class ComparisonFailureBuilder
         return new ComparisonFailure(
             $expectedAsString,
             $actualAsString,
-            $t->getComparisonFailure()->getDiff()
+            $t->getComparisonFailure()->getDiff(),
         );
     }
 

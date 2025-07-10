@@ -6,6 +6,7 @@ namespace NunoMaduro\Collision\Adapters\Phpunit;
 
 use Closure;
 use NunoMaduro\Collision\Adapters\Phpunit\Printers\DefaultPrinter;
+use NunoMaduro\Collision\Adapters\Phpunit\Support\ResultReflection;
 use NunoMaduro\Collision\Exceptions\ShouldNotHappen;
 use NunoMaduro\Collision\Exceptions\TestException;
 use NunoMaduro\Collision\Exceptions\TestOutcome;
@@ -16,18 +17,20 @@ use PHPUnit\Event\Telemetry\Info;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\IncompleteTestError;
 use PHPUnit\Framework\SkippedWithMessageException;
+use PHPUnit\Runner\TestSuiteSorter;
 use PHPUnit\TestRunner\TestResult\TestResult as PHPUnitTestResult;
 use PHPUnit\TextUI\Configuration\Registry;
 use ReflectionClass;
 use ReflectionFunction;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
-use function Termwind\render;
-use function Termwind\renderUsing;
 use Termwind\Terminal;
-use function Termwind\terminal;
 use Whoops\Exception\Frame;
 use Whoops\Exception\Inspector;
+
+use function Termwind\render;
+use function Termwind\renderUsing;
+use function Termwind\terminal;
 
 /**
  * @internal
@@ -53,7 +56,7 @@ final class Style
     public function __construct(ConsoleOutputInterface $output)
     {
         if (! $output instanceof ConsoleOutput) {
-            throw new ShouldNotHappen();
+            throw new ShouldNotHappen;
         }
 
         $this->terminal = terminal();
@@ -171,7 +174,7 @@ final class Style
 
         array_map(function (TestResult $testResult): void {
             if (! $testResult->throwable instanceof Throwable) {
-                throw new ShouldNotHappen();
+                throw new ShouldNotHappen;
             }
 
             renderUsing($this->output);
@@ -240,7 +243,7 @@ final class Style
             }
         }
 
-        $pending = $result->numberOfTests() - $result->numberOfTestsRun();
+        $pending = ResultReflection::numberOfTests($result) - $result->numberOfTestsRun();
         if ($pending > 0) {
             $tests[] = "\e[2m$pending pending\e[22m";
         }
@@ -254,7 +257,7 @@ final class Style
                 sprintf(
                     '  <fg=gray>Tests:</>    <fg=default>%s</><fg=gray> (%s assertions)</>',
                     implode('<fg=gray>,</> ', $tests),
-                    $result->numberOfAssertions()
+                    $result->numberOfAssertions(),
                 ),
             ]);
         }
@@ -265,6 +268,16 @@ final class Style
                 $timeElapsed
             ),
         ]);
+
+        $configuration = Registry::get();
+        if ($configuration->executionOrder() === TestSuiteSorter::ORDER_RANDOMIZED) {
+            $this->output->writeln([
+                sprintf(
+                    '  <fg=gray>Random Order Seed:</> <fg=default>%s</>',
+                    $configuration->randomOrderSeed(),
+                ),
+            ]);
+        }
 
         $this->output->writeln('');
     }
@@ -325,7 +338,7 @@ final class Style
      */
     public function writeError(Throwable $throwable): void
     {
-        $writer = (new Writer())->setOutput($this->output);
+        $writer = (new Writer)->setOutput($this->output);
 
         $throwable = new TestException($throwable, $this->output->isVerbose());
 
@@ -335,8 +348,10 @@ final class Style
             '/vendor\/nunomaduro\/collision/',
             '/vendor\/bin\/pest/',
             '/bin\/pest/',
+            '/vendor\/brianium\/paratest/',
             '/vendor\/pestphp\/pest/',
             '/vendor\/pestphp\/pest-plugin-arch/',
+            '/vendor\/pestphp\/pest-plugin-browser/',
             '/vendor\/phpspec\/prophecy-phpunit/',
             '/vendor\/phpspec\/prophecy/',
             '/vendor\/phpunit\/phpunit\/src/',
@@ -451,7 +466,14 @@ final class Style
             }
         }
 
-        $description = preg_replace('/`([^`]+)`/', '<span class="text-white">$1</span>', $result->description);
+        $description = $result->description;
+
+        /** @var string $description */
+        $description = preg_replace('/`([^`]+)`/', '<span class="text-white">$1</span>', $description);
+
+        if (class_exists(\Pest\Collision\Events::class)) {
+            $description = \Pest\Collision\Events::beforeTestMethodDescription($result, $description);
+        }
 
         renderUsing($this->output);
         render(sprintf(<<<'HTML'
@@ -461,6 +483,8 @@ final class Style
                 </span>%s
             </div>
         HTML, $seconds === '' ? '' : 'flex space-x-1 justify-between', $truncateClasses, $result->color, $result->icon, $description, $warning, $seconds));
+
+        class_exists(\Pest\Collision\Events::class) && \Pest\Collision\Events::afterTestMethodDescription($result);
     }
 
     /**
