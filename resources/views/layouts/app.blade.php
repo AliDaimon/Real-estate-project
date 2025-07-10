@@ -51,7 +51,7 @@
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 سكني العقارات. جميع الحقوق محفوظة.</p>
+            <p>&copy; 2025 سكني للعقارات. جميع الحقوق محفوظة.</p>
         </div>
     </footer>
 </body>
