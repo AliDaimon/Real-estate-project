@@ -61,7 +61,7 @@ class DatabaseSeeder extends Seeder
             'location' => 'بحري - حي المزاد',
             'type' => 'فيلا',
             'listing_type' => 'بيع',
-            'rooms' => 5,
+            'rooms' => 4,
             'bathrooms' => 4,
             'size' => 400,
             'description' => 'فيلا راقية في حي المزاد ببحري، تتكون من 5 غرف نوم رئيسية، 4 حمامات، مجلس، صالة كبيرة، مطبخ واسع، وحديقة خاصة مع مسبح. تشطيب عالي الجودة.',
