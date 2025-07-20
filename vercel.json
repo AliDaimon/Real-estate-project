@@ -15,5 +15,10 @@
     "APP_ENV": "production",
     "APP_DEBUG": "false",
     "LOG_CHANNEL": "stderr"
+  },
+  "build": {
+    "env": {
+      "COMPOSER_INSTALL_FLAGS": "--optimize-autoloader --no-dev"
+    }
   }
 }
