@@ -18,7 +18,7 @@
   },
   "build": {
     "env": {
-      "COMPOSER_INSTALL_FLAGS": "--optimize-autoloader --no-dev"
+      "COMPOSER_INSTALL_FLAGS": "--optimize-autoloader --no-dev --no-scripts"
     }
   }
 }
