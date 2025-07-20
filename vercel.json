@@ -14,11 +14,9 @@
   "env": {
     "APP_ENV": "production",
     "APP_DEBUG": "false",
-    "LOG_CHANNEL": "stderr"
-  },
-  "build": {
-    "env": {
-      "COMPOSER_INSTALL_FLAGS": "--optimize-autoloader --no-dev --no-scripts"
-    }
+    "LOG_CHANNEL": "stderr",
+    "DB_CONNECTION": "pgsql",
+    "SESSION_DRIVER": "database",
+    "CACHE_DRIVER": "database"
   }
 }
