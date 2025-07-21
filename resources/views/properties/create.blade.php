@@ -44,7 +44,6 @@
                         <option value="شقة" {{ old('type') === 'شقة' ? 'selected' : '' }}>شقة</option>
                         <option value="منزل" {{ old('type') === 'منزل' ? 'selected' : '' }}>منزل</option>
                         <option value="فيلا" {{ old('type') === 'فيلا' ? 'selected' : '' }}>فيلا</option>
-                        <option value="محل" {{ old('type') === 'محل' ? 'selected' : '' }}>محل</option>
                     </select>
                     @error('type')
                         <span class="error">{{ $message }}</span>
