@@ -20,7 +20,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="price">السعر (ريال):</label>
+                    <label for="price">السعر (جنيه):</label>
                     <input type="number" id="price" name="price" value="{{ old('price') }}" required>
                     @error('price')
                         <span class="error">{{ $message }}</span>
