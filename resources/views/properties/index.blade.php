@@ -29,7 +29,7 @@
                 
                 <div class="property-info">
                     <h3>{{ $property->title }}</h3>
-                    <p class="price">{{ number_format($property->price) }} ريال</p>
+                    <p class="price">{{ number_format($property->price) }} جنيه</p>
                     <p class="location">📍 {{ $property->location }}</p>
                     <p class="type">{{ $property->type }} • {{ $property->listing_type }}</p>
                     
