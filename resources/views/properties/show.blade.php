@@ -34,7 +34,7 @@
             </div>
 
             <div class="property-price">
-                <span class="price">{{ number_format($property->price) }} ريال</span>
+                <span class="price">{{ number_format($property->price) }} جنيه</span>
                 <span class="listing-type">{{ $property->listing_type }}</span>
             </div>
 
